@@ -1,20 +1,28 @@
 $ErrorActionPreference = 'Stop'
 [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new()
 
-$sourceDirectory = Join-Path $PSScriptRoot '01_技术报告\LaTeX源文件'
-$buildScript = Join-Path $sourceDirectory 'build-report.ps1'
-$generatedPdf = Join-Path $sourceDirectory 'main.pdf'
-$submissionPdf = Join-Path $PSScriptRoot '01_技术报告\船体加工车间智能排产与齐套配盘优化调度技术方案报告.pdf'
+$buildScript = Get-ChildItem -LiteralPath $PSScriptRoot -Recurse -File -Filter 'build-report.ps1' |
+    Select-Object -First 1
 
-if (-not (Test-Path -LiteralPath $buildScript)) {
-    throw "未找到报告构建脚本：$buildScript"
+if (-not $buildScript) {
+    throw 'The LaTeX build script was not found.'
 }
 
-& $buildScript
+$sourceDirectory = $buildScript.Directory.FullName
+$reportDirectory = Split-Path -Parent $sourceDirectory
+$generatedPdf = Join-Path $sourceDirectory 'main.pdf'
+$submissionPdf = Get-ChildItem -LiteralPath $reportDirectory -File -Filter '*.pdf' |
+    Select-Object -First 1
+
+if (-not $submissionPdf) {
+    throw 'The submission PDF target was not found.'
+}
+
+& $buildScript.FullName
 
 if (-not (Test-Path -LiteralPath $generatedPdf)) {
-    throw "构建完成后未找到 PDF：$generatedPdf"
+    throw 'XeLaTeX did not generate main.pdf.'
 }
 
-Copy-Item -LiteralPath $generatedPdf -Destination $submissionPdf -Force
-Write-Host "最终 PDF 已更新：$submissionPdf" -ForegroundColor Green
+Copy-Item -LiteralPath $generatedPdf -Destination $submissionPdf.FullName -Force
+Write-Host ('PDF updated: ' + $submissionPdf.FullName) -ForegroundColor Green
