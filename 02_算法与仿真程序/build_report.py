@@ -1,4 +1,4 @@
-"""从 steel_schedule_model.py 的输出生成可提交前继续完善的 Word 建模报告。"""
+"""根据 steel_schedule_model.py 的排产结果生成 Word 建模报告。"""
 from __future__ import annotations
 
 import argparse
